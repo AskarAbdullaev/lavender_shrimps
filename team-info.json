@@ -9,26 +9,25 @@
             "github_user": "AskarAbdullaev"
         },
       {
-            "student_id": "k00000000",
-            "first_name": "First",
-            "last_name": "Last",
-            "email": "first.last@mail.com",
-            "github_user": "mygitusername"
+            "student_id": "k12227403",
+            "first_name": "???",
+            "last_name": "???",
+            "email": "???",
+            "github_user": "???"
         },
       {
-            "student_id": "k00000000",
-            "first_name": "First",
-            "last_name": "Last",
-            "email": "first.last@mail.com",
-            "github_user": "mygitusername"
+            "student_id": "k12019841",
+            "first_name": "???",
+            "last_name": "???",
+            "email": "???",
+            "github_user": "???"
         },
       {
-            "student_id": "k00000000",
-            "first_name": "First",
-            "last_name": "Last",
-            "email": "first.last@mail.com",
-            "github_user": "mygitusername"
-        },
-        // ...add a record for each student
+            "student_id": "k12556503",
+            "first_name": "???",
+            "last_name": "???",
+            "email": "???",
+            "github_user": "???"
+        }
     ]
 }

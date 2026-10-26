@@ -1,1 +1,34 @@
-
+{
+    "team_name": "Lavender Shrimps",
+    "students": [
+      {
+            "student_id": "k12133168",
+            "first_name": "Askar",
+            "last_name": "Abdullaev",
+            "email": "abdullaev25042000@gmail.com",
+            "github_user": "AskarAbdullaev"
+        },
+      {
+            "student_id": "k00000000",
+            "first_name": "First",
+            "last_name": "Last",
+            "email": "first.last@mail.com",
+            "github_user": "mygitusername"
+        },
+      {
+            "student_id": "k00000000",
+            "first_name": "First",
+            "last_name": "Last",
+            "email": "first.last@mail.com",
+            "github_user": "mygitusername"
+        },
+      {
+            "student_id": "k00000000",
+            "first_name": "First",
+            "last_name": "Last",
+            "email": "first.last@mail.com",
+            "github_user": "mygitusername"
+        },
+        // ...add a record for each student
+    ]
+}

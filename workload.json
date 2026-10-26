@@ -1,0 +1,25 @@
+{
+    "team_name": "Lavender Shrimps",
+    "students": [
+        {
+            "first_name": "Askar",
+            "last_name": "Abdullaev",
+            "workload": 0.25
+        },
+        {
+            "first_name": "???",
+            "last_name": "???",
+            "workload": 0.25
+        },
+        {
+            "first_name": "???",
+            "last_name": "???",
+            "workload": 0.25
+        },
+        {
+            "first_name": "???",
+            "last_name": "???",
+            "workload": 0.25
+        },
+    ]
+} 

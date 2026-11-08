@@ -1,0 +1,8 @@
+AI-assisted Subgroup for phase I:
+
+1) <FIRST_NAME> <LAST_NAME>, <MATR_NUMBER>
+
+2) <FIRST_NAME> <LAST_NAME>, <MATR_NUMBER>
+
+Records:
+

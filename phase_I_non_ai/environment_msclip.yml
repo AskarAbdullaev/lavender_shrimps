@@ -1,0 +1,36 @@
+name: msclip
+channels:
+  - defaults
+dependencies:
+  - python=3.11
+  - pip
+  - pip:
+      # PyTorch with CUDA 12.8 (needed for RTX 50-series GPUs); the +cu128 builds live on this index
+      - --extra-index-url https://download.pytorch.org/whl/cu128
+      - torch==2.11.0+cu128
+      - torchvision==0.26.0+cu128
+      # MicroscopyCLIP (Hugging Face transformers + open_clip as in the original environment.yml)
+      - transformers==5.22.2
+      - huggingface_hub==2.4.0
+      - safetensors==0.8.0
+      - tokenizers==0.23.3
+      - open_clip_torch==4.2.2
+      - timm==1.0.31
+      - ftfy==6.3.1
+      - regex==2026.11.9
+      # Images and numerics
+      - numpy==2.4.6
+      - pillow==13.0.0
+      - opencv-python-headless==5.0.0.93   # headless, because cellpose needs it (both opencv builds would clash)
+      - scikit-image==0.26.0
+      - scipy==1.17.1
+      - pandas==3.1.1
+      - tqdm==4.70.1
+      # Cellpose (same version as phase_I_non_ai/requirements.txt)
+      - cellpose==4.2.1.1
+      # PCA / t-SNE / UMAP and plotting
+      - scikit-learn==1.9.1
+      - umap-learn==0.6.0
+      - matplotlib==3.11.2
+      # Jupyter kernel
+      - ipykernel==7.4.0

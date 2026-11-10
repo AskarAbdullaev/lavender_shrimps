@@ -1,0 +1,11 @@
+# Python 3.12, NVIDIA GPU with CUDA (inference and feature flows run on the GPU)
+cellpose==4.2.1.1
+torch==2.15.0
+umap-learn==0.5.12
+scikit-learn==1.9.1
+scikit-image==0.26.0
+scipy==1.18.1
+numpy==2.5.4
+pandas==3.1.1
+pyarrow==26.0.1
+pillow==13.0.0

@@ -1,0 +1,283 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>CellposeSAM Atlas</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&family=Source+Serif+4:opsz,wght@8..60,500;8..60,600&display=swap" rel="stylesheet">
+<style>
+:root { --page:#f6f5f1; --surface:#fff; --plot:#fbfbf9; --ink:#17171b; --ink2:#4a4a50; --ink3:#5a5a60; --muted:#6c6c72; --line:#e4e2db; --line2:#eeede8; --track:#eeede8; --accent:#1c5cab; --accent-bg:#e8eff9;
+  --correct:#1baf7a; --inaccurate:#6250d6; --merged:#e34948; --split:#2a78d6; --missed:#eda100; --d0:#2a78d6; --d1:#eb6834; --d2:#1baf7a; --d3:#a8329a;
+  --serif:"Source Serif 4",Georgia,serif; --sans:"IBM Plex Sans",system-ui,sans-serif; --mono:"IBM Plex Mono",ui-monospace,monospace; }
+* { box-sizing:border-box; }
+body { margin:0; background:var(--page); color:var(--ink); font:14px/1.5 var(--sans); -webkit-font-smoothing:antialiased; }
+a { color:var(--accent); } a:hover { color:#0d366b; }
+button { font-family:inherit; }
+button:focus-visible,canvas:focus-visible { outline:2px solid var(--accent); outline-offset:2px; }
+main { max-width:1280px; margin:0 auto; padding:44px 28px 72px; }
+@media (max-width:640px){ main { padding:24px 16px 48px; } h1 { font-size:30px !important; } }
+.eyebrow { font:500 11px/1 var(--mono); letter-spacing:.08em; text-transform:uppercase; color:var(--muted); }
+h1 { font:600 40px/1.12 var(--serif); letter-spacing:-.01em; margin:14px 0 12px; text-wrap:balance; max-width:920px; }
+#lede { font:17px/1.55 var(--serif); color:var(--ink2); margin:0; max-width:700px; text-wrap:pretty; }
+.cols { margin-top:28px; display:flex; flex-wrap:wrap; gap:16px; align-items:flex-start; }
+.card { background:var(--surface); border:1px solid var(--line); border-radius:16px; padding:20px; min-width:0; }
+#mapcard { flex:1.3 1 540px; }
+#outcard { flex:1 1 380px; padding:20px 22px 22px; }
+@media (max-width:600px){ #mapcard,#outcard { flex-basis:100%; } }
+@media (max-width:760px){ #drawer { width:100vw; } }
+.toolbar { display:flex; flex-wrap:wrap; gap:12px 24px; align-items:flex-end; }
+.field { display:flex; flex-direction:column; gap:6px; }
+.lbl { font-size:12px; color:var(--muted); }
+.seg { display:inline-flex; flex-wrap:wrap; padding:3px; gap:2px; background:var(--track); border-radius:10px; }
+.seg button { font-size:13px; line-height:1; padding:9px 14px; border:0; border-radius:8px; cursor:pointer; background:transparent; color:var(--ink3); font-weight:500; transition:background .15s; }
+.seg button:hover { color:var(--ink); }
+.seg button.on { background:#fff; color:var(--ink); font-weight:600; box-shadow:0 1px 2px rgba(23,23,27,.12),0 0 0 1px rgba(23,23,27,.04); }
+.sub { font-size:13px; color:var(--ink3); }
+#plot-wrap { position:relative; margin-top:10px; background:var(--plot); border:1px solid var(--line2); border-radius:12px; overflow:hidden; }
+canvas { display:block; width:100%; height:500px; touch-action:none; cursor:crosshair; }
+@media (max-width:640px){ canvas { height:380px; } }
+#hint { position:absolute; left:50%; bottom:16px; transform:translateX(-50%); pointer-events:none; display:flex; gap:14px; align-items:center; background:var(--ink); color:#fff; border-radius:999px; padding:9px 16px; font-size:12.5px; white-space:nowrap; box-shadow:0 6px 20px rgba(0,0,0,.18); transition:opacity .3s; }
+#hint i { width:1px; height:12px; background:rgba(255,255,255,.3); }
+#hint.gone { opacity:0; }
+.selbar { display:flex; flex-wrap:wrap; gap:8px 12px; align-items:center; justify-content:space-between; margin-top:14px; min-height:32px; font-size:13px; color:var(--ink2); }
+.ghost { font-size:12.5px; padding:6px 12px; border-radius:999px; border:1px solid #d9d7d0; background:#fff; color:var(--ink); cursor:pointer; }
+.ghost:hover { background:#f3f2ee; } .ghost[hidden] { display:none; }
+.chips { display:flex; flex-wrap:wrap; gap:6px; align-items:center; }
+.chip { display:inline-flex; align-items:center; gap:7px; font-size:12.5px; padding:6px 11px; border-radius:999px; cursor:pointer; border:1px solid #e0ded7; background:#fff; color:var(--ink2); transition:background .15s,border-color .15s; }
+.chip:hover { border-color:#9a9890; }
+.chip.on { background:var(--accent-bg); border-color:var(--accent); color:var(--ink); }
+.chip .pc { font:11px var(--mono); color:var(--muted); }
+.sw { display:inline-block; width:9px; height:9px; border-radius:2px; flex:0 0 auto; }
+.fine { font-size:12.5px; line-height:1.5; color:var(--muted); margin:16px 0 0; text-wrap:pretty; }
+h2 { font:600 22px/1.25 var(--serif); margin:0; }
+.empty { margin-top:16px; border:1.5px dashed #d9d7d0; border-radius:12px; padding:20px; font-size:14px; color:var(--ink2); text-wrap:pretty; }
+.big { display:flex; align-items:baseline; gap:10px; flex-wrap:wrap; margin-top:18px; }
+.big b { font:600 46px/1 var(--serif); letter-spacing:-.02em; }
+.big span { font-size:14px; color:var(--ink2); }
+.bar { display:flex; height:10px; border-radius:999px; overflow:hidden; margin-top:14px; background:var(--track); gap:2px; }
+.bar span { height:100%; transition:width .35s ease; }
+.rows { display:grid; grid-template-columns:auto minmax(0,1fr) auto; gap:8px 12px; margin-top:14px; align-items:baseline; }
+.rows .sw { width:10px; height:10px; align-self:center; }
+.rows .t { font-size:13.5px; } .rows .t b { font-weight:500; } .rows .t em { font-style:normal; color:var(--muted); }
+.rows .v { font:13px var(--mono); text-align:right; }
+.breakdown { border-top:1px solid var(--line2); margin-top:22px; padding-top:18px; }
+.mixed .breakdown .lbl, .mixed #inputs { display:none; }
+.ov .breakdown { display:none; }
+.dslist { display:flex; flex-direction:column; gap:6px; margin-top:16px; }
+.dsrow { display:block; width:100%; text-align:left; padding:12px 14px; border:1px solid var(--line); border-radius:12px; background:#fff; cursor:pointer; color:var(--ink); transition:background .15s,border-color .15s; }
+.dsrow:hover { border-color:#9a9890; background:#fbfbf9; }
+.dsrow .top { display:flex; align-items:baseline; gap:8px; }
+.dsrow .nm { font-weight:600; font-size:14px; } .dsrow .n { font-size:12.5px; color:var(--muted); }
+.dsrow .pcv { margin-left:auto; font:600 20px/1 var(--serif); } .dsrow .pcl { font-size:12px; color:var(--muted); }
+.dsrow .bar { margin-top:9px; height:8px; }
+.okey { display:flex; flex-wrap:wrap; gap:6px 14px; margin-top:14px; font-size:12.5px; color:var(--ink2); }
+.okey span { display:inline-flex; align-items:center; gap:6px; }
+#flow { margin-top:14px; }
+.gb { display:grid; grid-template-columns:104px minmax(0,1fr) 3.4em; gap:8px 12px; align-items:center; }
+.gb .hd { font-size:12px; line-height:1.35; min-height:2.7em; display:flex; align-items:flex-end; color:var(--muted); } .gb .hd.r { justify-content:flex-end; } .gb .hd:first-child { justify-content:flex-end; text-align:right; } .gb .r { text-align:right; }
+.gb .gl { font:12px var(--mono); color:var(--ink2); text-align:right; white-space:nowrap; }
+.gb .sbar { display:flex; height:16px; border-radius:4px; overflow:hidden; gap:2px; background:var(--track); }
+.gb .sbar.run { height:9px; margin-top:-4px; }
+.gb .sbar span { height:100%; } .gb .sbar span:hover { filter:brightness(.82); }
+.gb .gv { font:12.5px var(--mono); text-align:right; font-variant-numeric:tabular-nums; } .gb .gv.run { font-size:11px; color:var(--muted); margin-top:-4px; }
+#drawer { position:fixed; top:0; right:0; bottom:0; width:clamp(460px,52vw,760px); max-width:100vw; background:#fff; border-left:1px solid var(--line); box-shadow:-18px 0 48px rgba(23,23,27,.12); z-index:30; display:flex; flex-direction:column; transform:translateX(105%); transition:transform .32s cubic-bezier(.2,.7,.2,1); visibility:hidden; }
+#drawer.open { transform:none; visibility:visible; }
+.dhead { display:flex; align-items:flex-start; justify-content:space-between; gap:12px; padding:20px 22px 14px; border-bottom:1px solid var(--line2); }
+.dtitle { font:600 22px/1.25 var(--serif); margin-top:8px; }
+.close { flex:0 0 36px; height:36px; border-radius:50%; border:1px solid var(--line); background:#fff; font-size:18px; line-height:1; color:var(--ink2); cursor:pointer; }
+.close:hover { background:#f3f2ee; }
+.dbody { flex:1; overflow:auto; padding:18px 22px 24px; }
+.frame { position:relative; line-height:0; background:#0b0b0c; border-radius:10px; overflow:hidden; touch-action:none; user-select:none; cursor:zoom-in; }
+.frame.zoomed { cursor:grab; } .frame.drag { cursor:grabbing; }
+.zoomer { position:relative; transform-origin:0 0; will-change:transform; }
+.zoomer img { width:100%; display:block; -webkit-user-drag:none; }
+.zctl { position:absolute; top:8px; right:8px; display:flex; gap:4px; line-height:1; }
+.zctl button { font:500 12.5px var(--sans); min-width:30px; height:30px; padding:0 9px; border-radius:7px; border:1px solid rgba(23,23,27,.18); background:rgba(255,255,255,.92); color:var(--ink); cursor:pointer; }
+.zctl button:hover { background:#fff; } .zctl .lvl { min-width:46px; font-family:var(--mono); color:var(--ink2); }
+.frame .miss { display:flex; align-items:center; justify-content:center; line-height:1.5; color:#9a9aa0; font:11.5px var(--mono); padding:20px; text-align:center; background:repeating-linear-gradient(135deg,#141416 0 8px,#1b1b1e 8px 16px); }
+.box { position:absolute; border:2px solid #00e6f0; pointer-events:none; }
+.key { display:flex; flex-direction:column; gap:6px; margin-top:12px; font-size:12.5px; color:var(--ink2); }
+.key span { display:flex; gap:8px; align-items:center; } .key i { width:16px; height:3px; border-radius:2px; flex:0 0 auto; box-shadow:0 0 0 1px rgba(23,23,27,.25); } .key i.boxkey { width:14px; height:10px; border:2px solid #00e6f0; border-radius:1px; box-shadow:none; }
+#tip { position:fixed; pointer-events:none; background:var(--ink); color:#fff; padding:7px 10px; border-radius:8px; font-size:12.5px; line-height:1.4; z-index:40; display:none; max-width:280px; box-shadow:0 6px 18px rgba(0,0,0,.18); }
+#tip b { font-weight:600; }
+</style>
+</head>
+<body>
+<main>
+<header>
+  <div class="eyebrow">CellposeSAM Atlas</div>
+  <h1>Where CellposeSAM works, and what happens to the cells it loses</h1>
+  <p id="lede">Model behaviour on four microscopy datasets, with annotated cells compared against the model's masks.</p>
+</header>
+<div class="cols">
+  <section class="card" id="mapcard">
+    <div class="toolbar">
+      <div class="field"><span class="lbl">Each point is</span>
+        <div class="seg" role="tablist" id="views"><button data-v="cells">A cell, any dataset</button><button data-v="glioma">A glioma cell</button></div>
+      </div>
+      <div class="field" id="subfield"><span class="lbl" id="sublbl"></span><div class="seg" id="subs"></div></div>
+    </div>
+    <div class="sub" id="plot-sub" style="margin-top:14px"></div>
+    <div id="plot-wrap">
+      <canvas id="plot" tabindex="0" aria-label="Map of points. Drag to circle a group, or click a point to open its image."></canvas>
+      <div id="hint"><span><b>Drag</b> to circle a group</span><i></i><span><b>Click</b> a point to see its image</span></div>
+    </div>
+    <div class="selbar"><span id="seltext"></span><button class="ghost" id="clear" hidden>Clear selection ×</button></div>
+    <div class="chips" id="legend" style="margin-top:8px"></div>
+  </section>
+  <section class="card" id="outcard">
+    <h2>What happened to these cells</h2>
+    <div class="sub" id="flow-sub" style="margin-top:4px;min-height:20px"></div>
+    <div id="summary"></div>
+    <div class="breakdown">
+      <div class="lbl" style="margin-bottom:8px">Break the outcome down by</div>
+      <div class="chips" id="inputs"></div>
+      <div id="flow"></div>
+      <p class="fine" id="flow-note" style="margin-top:10px"></p>
+    </div>
+  </section>
+</div>
+</main>
+<aside id="drawer" aria-label="Image detail" aria-hidden="true">
+  <div class="dhead">
+    <div style="min-width:0"><div class="eyebrow" id="d-eyebrow"></div><div class="dtitle" id="d-title"></div><div class="sub" id="d-sub" style="margin-top:2px"></div></div>
+    <button class="close" id="d-close" aria-label="Close">×</button>
+  </div>
+  <div class="dbody" id="d-body"></div>
+</aside>
+<div id="tip" role="status"></div>
+<script>
+const OLABEL={correct:"Correct",inaccurate:"Inaccurate boundary",merged:"Merged",split:"Split",missed:"Missed"};
+const KEY=[["#28e18c","Correct: mask matches an annotated cell"],["#bf00ff","Inaccurate boundary: mask with the wrong outline"],["#ff504b","Merged: one mask covering two or more cells"],["#26a5ff","Split: mask covering only part of a cell"],["#ffbe00","Missed: annotated cell with no mask"]];  // outline colours drawn into the images
+const DEF={correct:"mask matches the annotated cell",inaccurate:"found, but the outline is off",merged:"joined with a neighbour into one mask",split:"broken into several masks",missed:"no mask for this cell"};
+const $=id=>document.getElementById(id), fmt=n=>n.toLocaleString("en-US"), pct=(x,d=0)=>`${(x*100).toFixed(d)}%`, sum=a=>a.reduce((x,y)=>x+y,0);
+const esc=s=>String(s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+const css=v=>getComputedStyle(document.documentElement).getPropertyValue(v).trim();
+const tip=$("tip"); function showTip(x,y,t){tip.innerHTML=t;tip.style.display="block";tip.style.left=Math.min(x+14,innerWidth-290)+"px";tip.style.top=(y+14)+"px"} function hideTip(){tip.style.display="none"}
+let D, S={view:"cells",run:"default",sel:null,input:"diameter",open:null,color:"outcome"}, UI={drawer:false,interacted:false};
+const canvas=$("plot"), ctx=canvas.getContext("2d"); let W=0,H=0,screen=[],lasso=null;
+const layoutPts=()=>S.view==="cells"?[D.allcells.x,D.allcells.y]:[D.glioma.x,D.glioma.y];
+const pointCount=()=>layoutPts()[0].length;
+const gliomaDs=()=>D.datasets.findIndex(d=>d.id==="glioma");
+const outcomeOf=i=>S.view==="cells"?D.cells.outcome[i]:S.run==="default"?D.cells.outcome[D.glioma.cell[i]]:D.glioma.runs[S.run][i];
+
+function layout(){ const r=canvas.getBoundingClientRect(),dpr=devicePixelRatio||1; W=r.width;H=r.height; canvas.width=W*dpr;canvas.height=H*dpr; ctx.setTransform(dpr,0,0,dpr,0,0); project(); drawPlot(); }
+function project(){ const pad=28,[xs,ys]=layoutPts(); screen=xs.map((x,i)=>[pad+x*(W-2*pad),pad+(1-ys[i])*(H-2*pad)]); }
+function drawPlot(){ ctx.clearRect(0,0,W,H); const sel=S.sel;
+  ctx.strokeStyle="#8a8a90"; ctx.lineWidth=1; ctx.beginPath(); ctx.moveTo(6.5,H-46); ctx.lineTo(6.5,H-6.5); ctx.lineTo(46,H-6.5); ctx.stroke(); ctx.fillStyle="#8a8a90"; ctx.font="11px 'IBM Plex Sans',sans-serif"; ctx.fillText("UMAP 1",15,H-11); ctx.save(); ctx.translate(21,H-22); ctx.rotate(-Math.PI/2); ctx.fillText("UMAP 2",0,-1); ctx.restore();
+  { const all=S.view==="cells", byDs=all&&S.color==="dataset", cols=byDs?D.datasets.map((_,k)=>css("--d"+k)):D.outcomes.map(o=>css("--"+o)), n=screen.length, base=all?D.allcells.order:[...Array(n).keys()], order=sel?[...base].sort((a,b)=>sel.has(a)-sel.has(b)):base, s=all?1:1.3, on1=all?.7:.9, off=all?.04:.1; order.forEach(i=>{const [x,y]=screen[i],on=!sel||sel.has(i); ctx.globalAlpha=on?on1:off; ctx.fillStyle=cols[byDs?D.cells.ds[i]:outcomeOf(i)]; ctx.fillRect(x-s,y-s,2*s,2*s); }); }
+  ctx.globalAlpha=1;
+  if(UI.drawer&&S.open&&S.open.point!=null){const p=screen[S.open.point]; if(p){ctx.strokeStyle=css("--ink");ctx.lineWidth=2;ctx.beginPath();ctx.arc(p[0],p[1],9,0,7);ctx.stroke();}}
+  if(lasso&&lasso.length>1){ctx.strokeStyle=css("--accent");ctx.lineWidth=1.5;ctx.setLineDash([4,3]);ctx.beginPath();lasso.forEach((p,i)=>i?ctx.lineTo(p[0],p[1]):ctx.moveTo(p[0],p[1]));ctx.closePath();ctx.fillStyle="rgba(28,92,171,.07)";ctx.fill();ctx.stroke();ctx.setLineDash([]);}
+}
+function inPoly(pt,poly){let c=false;for(let i=0,j=poly.length-1;i<poly.length;j=i++){const a=poly[i],b=poly[j];if((a[1]>pt[1])!==(b[1]>pt[1])&&pt[0]<(b[0]-a[0])*(pt[1]-a[1])/(b[1]-a[1])+a[0])c=!c}return c}
+function nearest(x,y){let best=-1,bestOn=-1,dist=12*12,distOn=dist;screen.forEach((p,i)=>{const d=(p[0]-x)**2+(p[1]-y)**2;if(d<dist){dist=d;best=i}if(S.sel&&S.sel.has(i)&&d<distOn){distOn=d;bestOn=i}});return bestOn>=0?bestOn:best}
+function xy(e){const r=canvas.getBoundingClientRect();return [e.clientX-r.left,e.clientY-r.top]}
+function touch(){ if(!UI.interacted){UI.interacted=true;$("hint").classList.add("gone")} }
+canvas.addEventListener("pointerdown",e=>{if(!D)return;canvas.setPointerCapture(e.pointerId);lasso=[xy(e)];hideTip();touch()});
+canvas.addEventListener("pointermove",e=>{if(!D)return;const p=xy(e);if(lasso){const c=e.getCoalescedEvents?e.getCoalescedEvents():[];(c.length?c:[e]).forEach(v=>lasso.push(xy(v)));drawPlot();return} const i=nearest(p[0],p[1]);canvas.style.cursor=i>=0?"pointer":"crosshair";if(i<0){hideTip();return} showTip(e.clientX,e.clientY,pointTip(i)+" · click to open")});
+canvas.addEventListener("pointerleave",hideTip);
+canvas.addEventListener("pointerup",e=>{ const l=lasso;lasso=null; if(!l||!D) return; l.push(xy(e)); const span=Math.max(...l.map(q=>Math.hypot(q[0]-l[0][0],q[1]-l[0][1])));
+  if(span<5){ const p=xy(e),i=nearest(p[0],p[1]); if(i>=0){ openPoint(i); hideTip(); setDrawer(true); } drawPlot(); return; }
+  const chosen=new Set(); screen.forEach((p,i)=>{if(inPoly(p,l))chosen.add(i)}); if(!chosen.size){ drawPlot(); $("seltext").textContent="No points inside that outline. Selection unchanged."; return; } S.sel=chosen; render(); });
+function pointTip(i){ if(S.view==="cells") return `<b>${OLABEL[D.outcomes[D.cells.outcome[i]]]}</b><br>${esc(D.datasets[D.cells.ds[i]].name)} cell`; return `<b>${OLABEL[D.outcomes[outcomeOf(i)]]}</b><br>Glioma cell${S.run==="default"?"":`, ${S.run} px`}`}
+
+function selectedCells(){ const c=D.cells, res=[]; if(S.view==="cells") return S.sel?[...S.sel]:null; if(!S.sel) return D.glioma.cell.slice(); S.sel.forEach(i=>res.push(D.glioma.cell[i])); return res; }
+function flowData(){ const ids=selectedCells(); if(!ids) return {overview:true}; if(!ids.length) return {empty:"Select cells on the map to see them here."}; const dset=new Set(ids.map(i=>D.cells.ds[i])); if(dset.size>1){ const tot=D.outcomes.map(()=>0); ids.forEach(i=>tot[D.cells.outcome[i]]++); return {mixed:true,tot,n:ids.length,names:D.datasets.filter((_,k)=>dset.has(k)).map(d=>d.name)}; }
+  const ds=[...dset][0], gl=D.datasets[ds].id==="glioma", third=gl&&S.run!=="default"; const input=D.inputs.find(x=>x.key===S.input), bins=D.cells.bins[S.input]; const O=D.outcomes.length;
+  const ab=Array.from({length:5},()=>Array(O).fill(0)), ar=Array.from({length:5},()=>Array(O).fill(0)); let n=0;
+  for(const i of ids){const b=bins[i]; if(b<0) continue; const a=D.cells.outcome[i]; ab[b][a]++; n++; if(third){const g=D.cells.glioma[i]; ar[b][D.glioma.runs[S.run][g]]++} }
+  return {ds,input,ab,ar,n,third,names:input.text[D.datasets[ds].id]}; }
+function dsIds(k){ const ids=[]; for(let i=0;i<D.cells.ds.length;i++) if(D.cells.ds[i]===k) ids.push(i); return ids; }
+function drawOverview(){
+  $("flow-sub").textContent="Select cells on the map, or click a dataset below.";
+  const rows=D.datasets.map((d,k)=>{ const ids=dsIds(k), c=D.outcomes.map(()=>0); ids.forEach(i=>c[D.cells.outcome[i]]++); return {d,k,ids,c,n:ids.length}; }).sort((a,b)=>b.c[0]/b.n-a.c[0]/a.n);
+  $("summary").innerHTML=`<div class="dslist">${rows.map(r=>`<button class="dsrow" data-k="${r.k}" aria-label="Select ${esc(r.d.name)}"><div class="top"><span class="nm">${esc(r.d.name)}</span><span class="n">${fmt(r.n)} cells</span><span class="pcv">${pct(r.c[0]/r.n)}</span><span class="pcl">correct</span></div>
+    <div class="bar">${D.outcomes.map((o,i)=>`<span title="${OLABEL[o]} ${pct(r.c[i]/r.n,1)}" style="background:var(--${o});width:${r.c[i]/r.n*100}%"></span>`).join("")}</div></button>`).join("")}</div>
+    <div class="okey">${D.outcomes.map(o=>`<span><i class="sw" style="background:var(--${o})"></i>${OLABEL[o]}</span>`).join("")}</div>
+    <p class="fine">Share of each dataset's annotated cells per outcome, at default settings. Select a group to break the outcome down by an input.</p>`;
+  $("summary").querySelectorAll(".dsrow").forEach(b=>b.onclick=()=>{ S.sel=new Set(dsIds(+b.dataset.k)); touch(); render(); });
+}
+function drawOutcomes(){ const F=flowData(); $("outcard").classList.toggle("mixed",!!F.mixed); $("outcard").classList.toggle("ov",!!F.overview);
+  if(F.overview){ drawOverview(); return; }
+  if(F.empty){ $("summary").innerHTML=`<div class="empty">${F.empty}</div>`; $("flow").innerHTML=""; $("flow-note").textContent=""; $("flow-sub").textContent=""; return; }
+  const mid=F.mixed?F.tot:D.outcomes.map((_,o)=>F.ab.reduce((a,r)=>a+r[o],0)), right=F.mixed?F.tot:D.outcomes.map((_,o)=>F.ar.reduce((a,r)=>a+r[o],0)), tot=F.third?right:mid, n=sum(tot)||1;
+  $("summary").innerHTML=`<div class="big"><b>${pct(tot[0]/n)}</b><span>${F.third?`segmented correctly at ${S.run} px`:"segmented correctly"}</span></div>
+    <div class="bar">${D.outcomes.map((o,i)=>`<span title="${OLABEL[o]}" style="background:var(--${o});width:${tot[i]/n*100}%"></span>`).join("")}</div>
+    <div class="rows">${D.outcomes.map((o,i)=>`<i class="sw" style="background:var(--${o})"></i><span class="t"><b>${OLABEL[o]}</b> <em>· ${DEF[o]}</em></span><span class="v">${pct(tot[i]/n)}</span>`).join("")}</div>`;
+  if(F.mixed){ $("flow-sub").textContent=`${F.names.join(", ")}: ${fmt(F.n)} annotated cells in this selection`; $("flow").innerHTML=`<div class="empty">The breakdown by input needs a single dataset, because its groups are computed per dataset. Select within one dataset to see it.</div>`; $("flow-note").textContent="Shares are pooled across the selected datasets, so datasets with more cells count more."; return; }
+  $("flow-sub").textContent=`${D.datasets[F.ds].name}, ${fmt(F.n)} annotated cells${S.sel?" in this selection":""}`;
+  $("flow-note").textContent=F.third?`The thinner bar shows the same cells at ${S.run} px.`:"";
+  drawGroups(F);
+}
+function drawGroups(F){ const host=$("flow"), O=D.outcomes;
+  const bar=(cnt,cls,who)=>{ const n=sum(cnt)||1; return `<div class="sbar${cls}" role="img" aria-label="${esc(who)}: ${O.map((o,j)=>`${OLABEL[o]} ${pct(cnt[j]/n)}`).join(", ")}">${O.map((o,j)=>cnt[j]?`<span data-t="${esc(`<b>${who}</b><br>${OLABEL[o]}: ${fmt(cnt[j])} of ${fmt(n)} (${pct(cnt[j]/n,1)})`)}" style="background:var(--${o});width:${cnt[j]/n*100}%"></span>`:"").join("")}</div>`; };
+  let h=`<div class="gb${F.third?" two":""}"><span class="hd">${esc(F.input.unit)}</span><span class="hd">Share of cells per outcome${F.third?`, default and at ${S.run} px`:""}</span><span class="hd r">Correct</span>`;
+  for(let i=0;i<5;i++){ const a=F.ab[i], who=`${F.input.label} ${F.names[i]}`;
+    h+=`<span class="gl"${F.third?' style="grid-row:span 2"':""}>${esc(F.names[i])}</span>${bar(a,"",who+(F.third?", default":""))}<span class="gv">${pct(a[0]/(sum(a)||1))}</span>`;
+    if(F.third){ const r=F.ar[i]; h+=`${bar(r," run",`${who}, at ${S.run} px`)}<span class="gv run">${pct(r[0]/(sum(r)||1))}</span>`; } }
+  host.innerHTML=h+"</div>";
+  host.querySelectorAll(".sbar span").forEach(p=>{ p.addEventListener("mousemove",e=>showTip(e.clientX,e.clientY,p.dataset.t)); p.addEventListener("mouseleave",hideTip); });
+}
+function openPoint(i){ if(S.view==="cells") S.open={img:D.cells.img[i],point:i,box:D.allcells.box[i]}; else { const c=D.glioma.cell[i]; S.open={img:D.cells.img[c],point:i,box:D.glioma.box[i]}; } drawDrawer(); }
+function setDrawer(on){ UI.drawer=on; $("drawer").classList.toggle("open",on); $("drawer").setAttribute("aria-hidden",on?"false":"true"); drawPlot(); }
+function drawDrawer(){ const o=S.open; if(!o) return; const im=D.images[o.img], run=S.view==="glioma"&&S.run!=="default"?S.run:"default";
+  $("d-eyebrow").textContent="Cell in image"; $("d-title").textContent=`${D.datasets[im.ds].name} image`; $("d-sub").textContent=run==="default"?"Model default settings, 30 px":`Assumed cell size ${run} px`;
+  const src=`img/${encodeURIComponent(im.id)}.overlay.${run}.jpg`;
+  const box=o.box?`<div class="box" style="left:${o.box[1]/im.w*100}%;top:${o.box[0]/im.h*100}%;width:${(o.box[3]-o.box[1])/im.w*100}%;height:${(o.box[2]-o.box[0])/im.h*100}%"></div>`:"";
+  $("d-body").innerHTML=`<div class="frame" id="zframe"><div class="zoomer"><img src="${src}" alt="Image with outlines colored by outcome" draggable="false">${box}</div>
+      <div class="zctl"><button data-z="out" aria-label="Zoom out">−</button><button data-z="reset" class="lvl" aria-label="Reset zoom">1.0×</button><button data-z="in" aria-label="Zoom in">+</button>${o.box?'<button data-z="cell">Zoom to cell</button>':""}</div></div>
+    <div class="key">${KEY.map(([c,t])=>`<span><i style="background:${c}"></i>${t}</span>`).join("")}${o.box?'<span><i class="boxkey"></i>The cell you clicked</span>':""}</div>
+    <p class="fine" style="margin-top:22px">Scroll or pinch to zoom, drag to move, double-click to reset. Click another point on the map to switch images. Press Esc to close.</p>`;
+  const img=$("d-body").querySelector("img"); img.onerror=()=>{img.outerHTML=`<div class="miss" style="aspect-ratio:${im.w}/${im.h}">${esc(im.id)}<br>image not found</div>`};
+  setupZoom($("zframe"));
+}
+function setupZoom(frame){ const zm=frame.querySelector(".zoomer"), bx=frame.querySelector(".box"), lvl=frame.querySelector(".lvl"), MAX=8; let s=1,x=0,y=0;
+  const apply=()=>{ const r=frame.getBoundingClientRect(); x=Math.min(0,Math.max(r.width-r.width*s,x)); y=Math.min(0,Math.max(r.height-r.height*s,y));
+    zm.style.transform=`translate(${x}px,${y}px) scale(${s})`; if(bx) bx.style.borderWidth=`${2/s}px`; lvl.textContent=`${s.toFixed(1)}×`; frame.classList.toggle("zoomed",s>1.01); };
+  const zoomAt=(f,cx,cy)=>{ const n=Math.min(MAX,Math.max(1,s*f)); x=cx-(cx-x)*n/s; y=cy-(cy-y)*n/s; s=n; apply(); };
+  const local=e=>{ const r=frame.getBoundingClientRect(); return [e.clientX-r.left,e.clientY-r.top]; };
+  const reset=()=>{ s=1; x=0; y=0; apply(); };
+  frame.addEventListener("wheel",e=>{ e.preventDefault(); zoomAt(Math.exp(-e.deltaY*0.0015),...local(e)); },{passive:false});
+  frame.addEventListener("dblclick",e=>{ if(!e.target.closest(".zctl")) reset(); });
+  const P=new Map(); let last=null;
+  frame.addEventListener("pointerdown",e=>{ if(e.target.closest(".zctl")) return; try{ frame.setPointerCapture(e.pointerId); }catch(_){} P.set(e.pointerId,local(e)); last=null; frame.classList.add("drag"); });
+  frame.addEventListener("pointermove",e=>{ if(!P.has(e.pointerId)) return; const p=local(e), q=P.get(e.pointerId); P.set(e.pointerId,p);
+    if(P.size===1){ x+=p[0]-q[0]; y+=p[1]-q[1]; apply(); return; }
+    const [a,b]=[...P.values()], d=Math.hypot(a[0]-b[0],a[1]-b[1]), m=[(a[0]+b[0])/2,(a[1]+b[1])/2];
+    if(last){ x+=m[0]-last.m[0]; y+=m[1]-last.m[1]; zoomAt(d/last.d,m[0],m[1]); } last={d,m}; });
+  const up=e=>{ P.delete(e.pointerId); last=null; if(!P.size) frame.classList.remove("drag"); };
+  frame.addEventListener("pointerup",up); frame.addEventListener("pointercancel",up);
+  frame.querySelector(".zctl").addEventListener("click",e=>{ const k=e.target.dataset.z, r=frame.getBoundingClientRect(); if(!k) return;
+    if(k==="in") zoomAt(1.6,r.width/2,r.height/2); else if(k==="out") zoomAt(1/1.6,r.width/2,r.height/2); else if(k==="reset") reset();
+    else if(k==="cell"&&bx){ const bl=bx.offsetLeft, bt=bx.offsetTop, bw=bx.offsetWidth, bh=bx.offsetHeight; s=Math.min(MAX,Math.max(1,0.3*r.width/Math.max(bw,bh,1))); x=r.width/2-(bl+bw/2)*s; y=r.height/2-(bt+bh/2)*s; apply(); } });
+  new ResizeObserver(apply).observe(frame);  // keep the pan inside the image when the drawer changes width
+  apply();
+}
+function drawChrome(){
+  $("views").querySelectorAll("button").forEach(b=>b.className=b.dataset.v===S.view?"on":"");
+  const sf=$("subfield"), sb=$("subs"); sb.innerHTML="";
+  if(S.view==="cells"){ $("sublbl").textContent="Color by"; [["outcome","Outcome"],["dataset","Dataset"]].forEach(([k,t])=>{const b=document.createElement("button");b.textContent=t;b.className=S.color===k?"on":"";b.onclick=()=>{S.color=k;render()};sb.append(b)}); }
+  if(S.view==="glioma"){ $("sublbl").textContent="Assumed cell size"; ["default",...D.runs].forEach(r=>{const b=document.createElement("button");b.textContent=r==="default"?"Model default, 30 px":`${r} px`;b.className=S.run===r?"on":"";b.onclick=()=>{S.run=r;render();if(UI.drawer)drawDrawer()};sb.append(b)}); }
+  $("plot-sub").textContent=S.view==="cells"?`All datasets at default settings, colored by ${S.color}`:`Colored by outcome${S.run==="default"?"":` at ${S.run} px`}`;
+  const unit=S.view==="glioma"?"glioma cells":"cells";
+  $("seltext").textContent=S.sel?`${fmt(S.sel.size)} ${S.sel.size===1?unit.replace(/s$/,""):unit} selected`:(S.view==="glioma"?"Nothing selected, so outcomes cover every glioma cell.":"Nothing selected.");
+  $("clear").hidden=!S.sel;
+  const L=$("legend"); L.innerHTML=""; const same=ids=>!!S.sel&&S.sel.size===ids.length&&ids.every(i=>S.sel.has(i));
+  const chip=(ids,inner)=>{const on=same(ids),b=document.createElement("button");b.className="chip"+(on?" on":"");b.setAttribute("aria-pressed",on);b.innerHTML=inner;b.onclick=()=>{S.sel=on?null:new Set(ids);touch();render()};L.append(b)};
+  if(S.view==="cells"&&S.color==="dataset"){ D.datasets.forEach((d,k)=>{const ids=dsIds(k);chip(ids,`<i class="sw" style="background:var(--d${k})"></i>${esc(d.name)}<span class="pc">${pct(ids.length/D.cells.ds.length)}</span>`)}); }
+  else { const N=pointCount(); D.outcomes.forEach((o,k)=>{const ids=[];for(let i=0;i<N;i++) if(outcomeOf(i)===k) ids.push(i);chip(ids,`<i class="sw" style="background:var(--${o})"></i>${OLABEL[o]}<span class="pc">${pct(ids.length/N)}</span>`)}); }
+  const I=$("inputs"); I.innerHTML=""; D.inputs.forEach(inp=>{const b=document.createElement("button");b.className="chip"+(S.input===inp.key?" on":"");b.setAttribute("aria-pressed",S.input===inp.key);b.textContent=inp.label;b.onclick=()=>{S.input=inp.key;render()};I.append(b)});
+}
+function render(){ hideTip(); drawChrome(); project(); drawPlot(); drawOutcomes(); }
+function setView(v){ if(S.view===v) return; S.view=v; S.run="default"; S.sel=null; S.open=null; project(); setDrawer(false); render(); }
+$("views").querySelectorAll("button").forEach(b=>b.onclick=()=>D&&setView(b.dataset.v));
+$("clear").onclick=()=>{S.sel=null;render()};
+$("d-close").onclick=()=>setDrawer(false);
+addEventListener("keydown",e=>{if(e.key==="Escape"&&UI.drawer)setDrawer(false)});
+new ResizeObserver(()=>{ if(D) layout(); }).observe(canvas);
+fetch("atlas.json").then(r=>r.json()).then(d=>{D=d; const o=[...d.allcells.x.keys()]; let s=42; for(let i=o.length-1;i>0;i--){ s=(s*1664525+1013904223)>>>0; const j=s%(i+1); [o[i],o[j]]=[o[j],o[i]]; } d.allcells.order=o; layout(); render(); }).catch(e=>{ $("lede").textContent="Couldn't load atlas.json. Serve this folder over a local web server."; console.error(e); });
+</script>
+</body>
+</html>

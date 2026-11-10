@@ -1,0 +1,6 @@
+# inputs and generated files
+data
+out/
+atlas/atlas.json
+atlas/img/
+__pycache__/

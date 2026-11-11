@@ -1,6 +1,9 @@
 # CellposeSAM Atlas
 
-An interactive page that shows how CellposeSAM (`cpsam_v2`, Cellpose 4.2.1.1) behaves on 47,428 annotated cells from four microscopy datasets. Each cell sits on a UMAP map of input features measured without the model. The right card shows what happened to the selected cells: correct, inaccurate boundary, merged, split or missed. Clicking a cell opens its image with the model's masks drawn on.
+An interactive page that shows how CellposeSAM (`cpsam_v2`, Cellpose 4.2.1.1) behaves on 47,428 annotated cells from four microscopy datasets. Each cell sits on a UMAP map of input features measured without the model. The right card shows what happened to the selected cells: correct, inaccurate boundary, merged, split or missed. Clicking a cell opens its image with the model's masks drawn on.  
+
+The visualization can be accesed through https://claude.ai/artifact/VA64KU6UADvuHJWjhPpCX9
+
 
 This folder holds only what is needed to rebuild that page from the raw datasets.
 
@@ -53,3 +56,4 @@ python -m http.server 8767 --bind 127.0.0.1 --directory atlas
 ```
 
 Then open http://localhost:8767. To share it, upload the whole `atlas/` folder (index.html, atlas.json, img/) to any static host.
+

@@ -1,8 +1,79 @@
 AI-assisted Subgroup for phase I:
 
-1) <FIRST_NAME> <LAST_NAME>, <MATR_NUMBER>
+1) Bernhard Ruhm, K12019841
 
 2) <FIRST_NAME> <LAST_NAME>, <MATR_NUMBER>
 
 Records:
 
+Tools: Claude Code (Opus 5.5) for analysis, pipeline and the interactive page;
+Claude Design for one visual restyle  
+
+--- Analysis setup ---------------------------------------------------------
+
+"Read docs/visualization-plan.md and docs/task-description.md.
+Before writing any code, propose an architecture and data pipeline for
+implementing the inference pipeline for all datasets. Ask me about anything unclear, 
+then wait for my approval"
+AI: proposed an architecture and pipeline and asked seven clarifying
+questions (datasets, model, inference, directory, ...).
+
+
+"cellpose-explorer was too "bloated" and felt overwealming to work with."
+Decision: we rejected the first AI-built explorer and rebuilt from
+scratch with simplicity as a constraint.
+
+"Rerun inference for glioma for cell size 60, 80 and 100, but keep the old run, since this is still
+informative."
+AI: had proposed rescaling (glioma cells ~80 px vs. the model's 30 px);
+ran diameters 60/80/100. Missed glioma cells fell from 83% to 47%.
+Decision: AI suggestion, accepted; keeping the original run was ours.
+
+"What should a threshold sweep do? In the end the goal is to analyze the
+behavior of the model and not have the best performance. If cells are
+missed will this not give a lot of insights?"
+AI: agreed it had drifted towards tuning; reframed the sweep as a
+diagnostic of where in Cellpose a cell is lost.
+
+- Visualization design ---------------------------------------------------
+
+"Could you use the error types from the previous implementation. I think
+the current names can be easily missinterpreted. ... remove the current
+visualization. Because it is again quite complicated to understand."
+Decision: ours; renamed outcomes, removed an overly complex view.
+
+"In hindsight the atlas viewer with umap projection was not to bad. What
+do you think of the following approach: A umap projection with
+possibility of selecting a single cell instead of an image. 
+Decision: ours.
+
+0 "Can you change the overlay so that green is aggrees, yellow missed and
+red is error."  
+Decision: ours.
+
+- Restyle, bugs, refinement ----------------------------------------------
+
+Then: "I changed the style with claude design. But the interaction
+is now a bit buggy. The umap input selection does not work. Can you reproduce the
+error. 
+AI: reproduced first, found and fixed seven real bugs 
+
+3 "Would it make sense to enable the "What happend to these cells" view
+only if a dataset or a lasso selection is active?"
+AI: agreed the default (glioma shown with nothing selected) was
+misleading; added a per-dataset overview as the empty state.
+Decision: our observation, AI refined.
+
+4 "is it normal that the flow does not change that much if the input
+selection (cell size, elongation etc) is changed?"
+AI: the flow chart hid differences (equal-size groups, fixed totals);
+proposed 100% bars per input group.
+Finding: small official-test cells found 65% vs. 98% for large ones;
+touching glioma cells 25% -> 3% found.
+Decision: our question exposed a misleading AI chart; replacement accepted.
+
+5 "Would it make more sense to have the same segmentation colors as
+outcomes?" / "... make the image larger or to have a zoom function?"
+AI: recoloured outlines (checked for colour-blind readers), added zoom;
+found images capped at 864 px instead of the claimed 1,000 px.
+Finding: possible annotation shift in breast image14.
